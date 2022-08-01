@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
-#nullable enable
+
 namespace PopStudio.PopAnim
 {
     internal static class PamXfl
@@ -33,10 +33,10 @@ namespace PopStudio.PopAnim
         }
         internal class FrameInfo2 : FrameInfo
         {
-            public List<CommandsInfo> command { get; set; }
-            public List<RemovesInfo> remove { get; set; }
-            public List<AddsInfo> append { get; set; }
-            public List<MovesInfo> change { get; set; }
+            public new List<CommandsInfo> command { get; set; }
+            public new List<RemovesInfo> remove { get; set; }
+            public new List<AddsInfo> append { get; set; }
+            public new List<MovesInfo> change { get; set; }
             public static FrameInfo fallback(FrameInfo2 src)
             {
                 return new FrameInfo
@@ -45,6 +45,8 @@ namespace PopStudio.PopAnim
                     remove = src.remove.ToArray(),
                     append = src.append.ToArray(),
                     change = src.change.ToArray(),
+                    label = src.label,
+                    stop = src.stop
                 };
             }
             public static FrameInfo[] fallback(FrameInfo2[] src)
@@ -76,33 +78,34 @@ namespace PopStudio.PopAnim
         public static double[] parse_transform_origin(XElement x_Matrix)
         {
             return new double[] {
-            double.Parse((string?)x_Matrix.Attribute("x") ?? "0"),
-            double.Parse((string?)x_Matrix.Attribute("y") ?? "0"),
-        };
+                double.Parse((string)x_Matrix.Attribute("x") ?? "0"),
+                double.Parse((string)x_Matrix.Attribute("y") ?? "0"),
+            };
         }
 
         public static double[] parse_transform(XElement x_Matrix)
         {
             return new double[] {
-            double.Parse((string?)x_Matrix.Attribute("a") ?? "1"),
-            double.Parse((string?)x_Matrix.Attribute("b") ?? "0"),
-            double.Parse((string?)x_Matrix.Attribute("c") ?? "0"),
-            double.Parse((string?)x_Matrix.Attribute("d") ?? "1"),
-            double.Parse((string?)x_Matrix.Attribute("tx") ?? "0"),
-            double.Parse((string?)x_Matrix.Attribute("ty") ?? "0"),
-        };
+                double.Parse((string)x_Matrix.Attribute("a") ?? "1"),
+                double.Parse((string)x_Matrix.Attribute("b") ?? "0"),
+                double.Parse((string)x_Matrix.Attribute("c") ?? "0"),
+                double.Parse((string)x_Matrix.Attribute("d") ?? "1"),
+                double.Parse((string)x_Matrix.Attribute("tx") ?? "0"),
+                double.Parse((string)x_Matrix.Attribute("ty") ?? "0"),
+            };
         }
-
+        private static double parse_color_compute(string multiplier_s, string offset_s)
+        {
+            return Math.Max(0, Math.Min(255, double.Parse(multiplier_s ?? "1") * 255 + double.Parse(offset_s ?? "0"))) / 255;
+        }
         public static double[] parse_color(XElement x_Matrix)
         {
-            var compute = (string? multiplier_s, string? offset_s) => Math.Max(0, Math.Min(255, double.Parse(multiplier_s ?? "1") * 255 + double.Parse(offset_s ?? "0"))) / 255;
             return new double[] {
-        compute((string?)x_Matrix.Attribute("redMultiplier"), (string?)x_Matrix.Attribute("redOffset")),
-        compute((string?)x_Matrix.Attribute("greenMultiplier"), (string?)x_Matrix.Attribute("greenOffset")),
-        compute((string?)x_Matrix.Attribute("blueMultiplier"), (string?)x_Matrix.Attribute("blueOffset")),
-        compute((string?)x_Matrix.Attribute("alphaMultiplier"), (string?)x_Matrix.Attribute("alphaOffset")),
-
-    };
+                parse_color_compute((string)x_Matrix.Attribute("redMultiplier"), (string)x_Matrix.Attribute("redOffset")),
+                parse_color_compute((string)x_Matrix.Attribute("greenMultiplier"), (string)x_Matrix.Attribute("greenOffset")),
+                parse_color_compute((string)x_Matrix.Attribute("blueMultiplier"), (string)x_Matrix.Attribute("blueOffset")),
+                parse_color_compute((string)x_Matrix.Attribute("alphaMultiplier"), (string)x_Matrix.Attribute("alphaOffset")),
+            };
         }
 
         public static double[] parse_image_document(XElement x_DOMSymbolItem, int index)
@@ -111,7 +114,7 @@ namespace PopStudio.PopAnim
             {
                 throw new Exception("");
             }
-            if ((string?)x_DOMSymbolItem.Attribute("name") != $"image/image_{index + 1}")
+            if ((string)x_DOMSymbolItem.Attribute("name") != $"image/image_{index + 1}")
             {
                 throw new Exception("");
             }
@@ -127,7 +130,7 @@ namespace PopStudio.PopAnim
                 throw new Exception("");
             }
             var x_DOMTimeline = x_DOMTimeline_list[0];
-            if ((string?)x_DOMTimeline.Attribute("name") != $"image_{index + 1}")
+            if ((string)x_DOMTimeline.Attribute("name") != $"image_{index + 1}")
             {
                 throw new Exception("");
             }
@@ -167,7 +170,7 @@ namespace PopStudio.PopAnim
                 throw new Exception("");
             }
             var x_DOMSymbolInstance = x_DOMSymbolInstance_list[0];
-            if ((string?)x_DOMSymbolInstance.Attribute("libraryItemName") != $"source/source_{index + 1}")
+            if ((string)x_DOMSymbolInstance.Attribute("libraryItemName") != $"source/source_{index + 1}")
             {
                 throw new Exception("");
             }
@@ -206,13 +209,13 @@ namespace PopStudio.PopAnim
 
         public static FrameInfo2[] parse_sprite_document(XElement x_DOMSymbolItem, int index)
         {
-            Model? model = null;
-            List<FrameInfo2> result = new();  // TODO size?
+            Model model = null;
+            List<FrameInfo2> result = new();
             if (x_DOMSymbolItem.Name.LocalName != "DOMSymbolItem")
             {
                 throw new Exception("");
             }
-            if ((string?)x_DOMSymbolItem.Attribute("name") != (index == -1 ? "main_sprite" : $"sprite/sprite_{index + 1}"))
+            if ((string)x_DOMSymbolItem.Attribute("name") != (index == -1 ? "main_sprite" : $"sprite/sprite_{index + 1}"))
             {
                 throw new Exception("");
             }
@@ -228,7 +231,7 @@ namespace PopStudio.PopAnim
                 throw new Exception("");
             }
             var x_DOMTimeline = x_DOMTimeline_list[0];
-            if ((string?)x_DOMTimeline.Attribute("name") != (index == -1 ? "main_sprite" : $"sprite_{index + 1}"))
+            if ((string)x_DOMTimeline.Attribute("name") != (index == -1 ? "main_sprite" : $"sprite_{index + 1}"))
             {
                 throw new Exception("");
             }
@@ -285,7 +288,7 @@ namespace PopStudio.PopAnim
                 Array.ForEach(x_DOMFrame_list, (x_DOMFrame) =>
                 {
                     int frame_index = (int)x_DOMFrame.Attribute("index");   // why bigint?
-                    int frame_duration = int.Parse((string?)x_DOMFrame.Attribute("duration") ?? "1");
+                    int frame_duration = int.Parse((string)x_DOMFrame.Attribute("duration") ?? "1");
                     double[] transform;
                     double[] color;
                     var x_elements_list = x_DOMFrame.Elements("elements").ToArray();
@@ -468,7 +471,7 @@ namespace PopStudio.PopAnim
                     throw new Exception("");
                 }
                 var x_DOMTimeline = x_DOMTimeline_list[0];
-                if (((string?)x_DOMTimeline.Attribute("name")) != "animation")
+                if (((string)x_DOMTimeline.Attribute("name")) != "animation")
                 {
                     throw new Exception("");
                 }
@@ -497,7 +500,7 @@ namespace PopStudio.PopAnim
                         int frame_index = int.Parse(x_DOMFrame.Attribute("index").Value);
                         if (x_DOMFrame.Attribute("name") != null)
                         {
-                            if (((string?)x_DOMFrame.Attribute("labelType")) != "name")
+                            if (((string)x_DOMFrame.Attribute("labelType")) != "name")
                             {
                                 throw new Exception("");
                             }
@@ -809,7 +812,7 @@ namespace PopStudio.PopAnim
                 new XElement("timeline",
                     new XElement("DOMTimeline",
                         new XAttribute("name", index == -1 ? "main_sprite" : $"sprite_{index + 1}"),
-                        new XElement("layers", (frame_node_list.Keys).Reverse().Select((layer_index) =>
+                        new XElement("layers", frame_node_list.Keys.OrderByDescending(i => i).Select((layer_index) =>
                             new XElement("DOMLayer",
                                 new XAttribute("name", layer_index + 1),
                                 new XElement("frames", frame_node_list[layer_index])
@@ -1007,28 +1010,6 @@ namespace PopStudio.PopAnim
             };
         }
 
-        // ------------------------------------------------
-
-        //public static void from_fsh(
-        //	PopAnimInfo raw,
-        //	string ripe_directory
-        //) {
-        //	var ripe = from(raw);
-        //	save_flash_package(ripe, ripe_directory);
-        //}
-
-        //public static void from_fs(
-        //	string raw_file,
-        //	string ripe_directory
-        //) {
-        //	var raw = jsonReadFile<Core.Tool.Animation.PopCapAnimation.Information.JS_N.Animation>(raw_file);
-        //	var ripe = from(raw);
-        //	save_flash_package(ripe, ripe_directory);
-        //}
-
-        // ------------------------------------------------
-
-
 
         // ------------ source manager --------------------
 
@@ -1195,7 +1176,7 @@ namespace PopStudio.PopAnim
 
         // ------------------------------------------------
 
-        static double[] k_initial_color = { 1.0, 1.0, 1.0, 1.0 };
+        static readonly double[] k_initial_color = { 1.0, 1.0, 1.0, 1.0 };
 
         // ------------------------------------------------
 
@@ -1275,7 +1256,8 @@ namespace PopStudio.PopAnim
             XmlWriterSettings settings = new()
             {
                 Indent = true,
-                IndentChars = "\t"
+                IndentChars = "\t",
+                OmitXmlDeclaration = true
             };
             using var writer = XmlWriter.Create(outFile, settings);
             document.Save(writer);
