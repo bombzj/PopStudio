@@ -241,12 +241,12 @@ namespace PopStudio.PopAnim
                 throw new Exception("");
             }
             var x_layers = x_layers_list[0];
-            var x_DOMLayer_list = x_layers.Elements("DOMLayer").ToArray();
+            var x_DOMLayer_list = x_layers.Elements("DOMLayer").ToList();
             x_DOMLayer_list.Reverse();
             int layer_count = 0;
             var get_frame_at = (int index) =>
             {
-                if(result.Count <= index)
+                if (result.Count <= index)
                 {
                     result.AddRange(new FrameInfo2[index - result.Count + 1]);
                 }
@@ -264,7 +264,7 @@ namespace PopStudio.PopAnim
                 }
                 return result[index];
             };
-            Array.ForEach(x_DOMLayer_list, (x_DOMLayer) =>
+            x_DOMLayer_list.ForEach((x_DOMLayer) =>
             {
                 var x_frames_list = x_DOMLayer.Elements("frames").ToArray();
                 if (x_frames_list.Length != 1)
@@ -272,7 +272,7 @@ namespace PopStudio.PopAnim
                     throw new Exception("");
                 }
                 var x_frames = x_frames_list[0];
-                var x_DOMFrame_list = x_frames.Elements("DOMFrame").ToArray();
+                var x_DOMFrame_list = x_frames.Elements("DOMFrame").ToList();
                 var colse_current_model_if_need = () =>
                 {
                     if (model != null)
@@ -285,9 +285,9 @@ namespace PopStudio.PopAnim
                         model = null;
                     }
                 };
-                Array.ForEach(x_DOMFrame_list, (x_DOMFrame) =>
+                x_DOMFrame_list.ForEach((x_DOMFrame) =>
                 {
-                    int frame_index = (int)x_DOMFrame.Attribute("index");   // why bigint?
+                    int frame_index = (int)x_DOMFrame.Attribute("index");
                     int frame_duration = int.Parse((string)x_DOMFrame.Attribute("duration") ?? "1");
                     double[] transform;
                     double[] color;
@@ -494,8 +494,8 @@ namespace PopStudio.PopAnim
                         throw new Exception("");
                     }
                     var x_frames = x_frames_list[0];
-                    var x_DOMFrame_list = x_frames.Elements("DOMFrame").ToArray();
-                    Array.ForEach(x_DOMFrame_list, (x_DOMFrame) =>
+                    var x_DOMFrame_list = x_frames.Elements("DOMFrame").ToList();
+                    x_DOMFrame_list.ForEach((x_DOMFrame) =>
                     {
                         int frame_index = int.Parse(x_DOMFrame.Attribute("index").Value);
                         if (x_DOMFrame.Attribute("name") != null)
@@ -550,8 +550,8 @@ namespace PopStudio.PopAnim
                         throw new Exception("");
                     }
                     var x_frames = x_frames_list[0];
-                    var x_DOMFrame_list = x_frames.Elements("DOMFrame").ToArray();
-                    Array.ForEach(x_DOMFrame_list, (x_DOMFrame) =>
+                    var x_DOMFrame_list = x_frames.Elements("DOMFrame").ToList();
+                    x_DOMFrame_list.ForEach((x_DOMFrame) =>
                     {
                         int frame_index = int.Parse(x_DOMFrame.Attribute("index").Value);
                         var x_Actionscript_list = x_DOMFrame.Elements("Actionscript").ToArray();
@@ -837,7 +837,7 @@ namespace PopStudio.PopAnim
                 command = -1
             };
             List<XElement> flow_node = new();
-            List < XElement> command_node = new();
+            List<XElement> command_node = new();
             animation.main_sprite.frame.Select((frame, frame_index) =>
             {
                 if (frame.label != null || frame.stop)
@@ -1040,7 +1040,7 @@ namespace PopStudio.PopAnim
                                         new XAttribute("index", "0"),
                                         new XElement("elements",
                                             new XElement("DOMBitmapInstance",
-                                            new XAttribute("libraryItemName", $"media/{image.name.Split("|")[0]}"),
+                                                new XAttribute("libraryItemName", $"media/{image.name.Split("|")[0]}"),
                                                 new XElement("matrix",
                                                     new XElement("Matrix", make_scale_matrix(resolution))
                                                 )
@@ -1072,7 +1072,6 @@ namespace PopStudio.PopAnim
         public static void resize(XElement[] document, int resolution)
         {
             Array.ForEach(document, (e) => resize_one(e, resolution));
-            return;
         }
 
         // ------------------------------------------------
@@ -1096,7 +1095,6 @@ namespace PopStudio.PopAnim
                 xmlWriteFile($"{directory}/LIBRARY/source/source_{i + 1}.xml", e);
                 return string.Empty;
             }).ToArray();
-            return;
         }
 
         // ------------------------------------------------
@@ -1112,13 +1110,13 @@ namespace PopStudio.PopAnim
         public static double[] mix_transform(double[] source, double[] change)
         {
             return new double[] {
-            change[0] * source[0] + change[2] * source[1],
-            change[1] * source[0] + change[3] * source[1],
-            change[0] * source[2] + change[2] * source[3],
-            change[1] * source[2] + change[3] * source[3],
-            change[0] * source[4] + change[2] * source[5] + change[4],
-            change[1] * source[4] + change[3] * source[5] + change[5]
-        };
+                change[0] * source[0] + change[2] * source[1],
+                change[1] * source[0] + change[3] * source[1],
+                change[0] * source[2] + change[2] * source[3],
+                change[1] * source[2] + change[3] * source[3],
+                change[0] * source[4] + change[2] * source[5] + change[4],
+                change[1] * source[4] + change[3] * source[5] + change[5]
+            };
         }
 
         public static double[] compute_standard_transform_from_variant(double[] transform)
@@ -1164,12 +1162,12 @@ namespace PopStudio.PopAnim
                 {
                     return new double[] { data[4], data[5] };
                 }
-                double acos_value = Math.Acos(data[0]);
-                double asin_value = Math.Asin(data[1]);
-                if (Math.Abs(Math.Abs(acos_value) - Math.Abs(asin_value)) <= 1e-2)
-                {
-                    return new double[] { asin_value, data[4], data[5] };
-                }
+                //double acos_value = Math.Acos(data[0]);
+                //double asin_value = Math.Asin(data[1]);
+                //if (Math.Abs(Math.Abs(acos_value) - Math.Abs(asin_value)) <= 1e-2)
+                //{
+                //    return new double[] { asin_value, data[4], data[5] };
+                //}
             }
             return (double[])data.Clone();
         }
@@ -1247,9 +1245,7 @@ namespace PopStudio.PopAnim
         // ------------------------------------------------
         public static void xmlWriteFile(string outFile, XElement data)
         {
-            XDocument document = new(new XDeclaration("1.0", "utf-8", null), data);
-            data.Name = xflns + data.Name.LocalName;
-            foreach (var e in data.Descendants())
+            foreach (var e in data.DescendantsAndSelf())
             {
                 e.Name = xflns + e.Name.LocalName;
             }
@@ -1260,13 +1256,13 @@ namespace PopStudio.PopAnim
                 OmitXmlDeclaration = true
             };
             using var writer = XmlWriter.Create(outFile, settings);
+            XDocument document = new(new XDeclaration("1.0", "utf-8", null), data);
             document.Save(writer);
         }
         public static XElement xmlReadFile(string file)
         {
             XElement data = XDocument.Load(file).Root!;
-            data.Name = data.Name.LocalName;
-            foreach (var e in data.Descendants())
+            foreach (var e in data.DescendantsAndSelf())
             {
                 e.Name = e.Name.LocalName;
             }
