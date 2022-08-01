@@ -53,14 +53,14 @@ namespace PopStudio.PopAnim
             }
         }
 
-        public static void Encode(PopAnimInfo pamInfo, string outFolder)
+        public static void Encode(PopAnimInfo pamInfo, string outFolder, int resolution)
         {
-            Directory.CreateDirectory(outFolder + "/library/image");
-            Directory.CreateDirectory(outFolder + "/library/sprite");
-            Directory.CreateDirectory(outFolder + "/library/source");
+            Directory.CreateDirectory(outFolder + "/LIBRARY/image");
+            Directory.CreateDirectory(outFolder + "/LIBRARY/sprite");
+            Directory.CreateDirectory(outFolder + "/LIBRARY/source");
             var ripe = from(pamInfo);
             save_flash_package(ripe, outFolder);
-            create_fsh(outFolder, pamInfo);
+            create_fsh(outFolder, pamInfo, resolution);
             create_xfl_content_file(outFolder);
         }
 
@@ -207,7 +207,7 @@ namespace PopStudio.PopAnim
         public static FrameInfo2[] parse_sprite_document(XElement x_DOMSymbolItem, int index)
         {
             Model? model = null;
-            List<FrameInfo2> result = new List<FrameInfo2>();  // TODO size?
+            List<FrameInfo2> result = new();  // TODO size?
             if (x_DOMSymbolItem.Name.LocalName != "DOMSymbolItem")
             {
                 throw new Exception("");
@@ -249,14 +249,14 @@ namespace PopStudio.PopAnim
                 }
                 if (result[index] == null)
                 {
-                    result[index] = new FrameInfo2
+                    result[index] = new()
                     {
                         label = null,
                         stop = false,
-                        command = new List<FrameInfo.CommandsInfo>(),
-                        remove = new List<FrameInfo.RemovesInfo>(),
-                        append = new List<FrameInfo.AddsInfo>(),
-                        change = new List<FrameInfo.MovesInfo>(),
+                        command = new(),
+                        remove = new(),
+                        append = new(),
+                        change = new(),
                     };
                 }
                 return result[index];
@@ -318,7 +318,7 @@ namespace PopStudio.PopAnim
                     {
                         throw new Exception("invalid name x");
                     }
-                    FrameInfo.AddsInfo current_instance = new FrameInfo.AddsInfo
+                    FrameInfo.AddsInfo current_instance = new()
                     {
                         resource = int.Parse(name_match.Groups[3].Value) - 1,
                         sprite = name_match.Groups[1].Value == "sprite"
@@ -370,7 +370,7 @@ namespace PopStudio.PopAnim
                     var target_frame = get_frame_at(frame_index);
                     if (model == null)
                     {
-                        model = new Model
+                        model = new()
                         {
                             index = layer_count,
                             resource = current_instance.resource,
@@ -415,14 +415,14 @@ namespace PopStudio.PopAnim
             {
                 if (result[i] == null)
                 {
-                    result[i] = new FrameInfo2
+                    result[i] = new()
                     {
                         label = null,
                         stop = false,
-                        command = new List<FrameInfo.CommandsInfo>(),
-                        remove = new List<FrameInfo.RemovesInfo>(),
-                        append = new List<FrameInfo.AddsInfo>(),
-                        change = new List<FrameInfo.MovesInfo>(),
+                        command = new(),
+                        remove = new(),
+                        append = new(),
+                        change = new(),
                     };
                 }
             }
@@ -616,7 +616,7 @@ namespace PopStudio.PopAnim
                     var frame = parse_sprite_document(flash.library.sprite[i], i);
                     return new SpriteInfo { name = e.name, frame_rate = frame_rate, work_area = new int[] { 0, frame.Length }, frame = FrameInfo2.fallback(frame) };
                 }).ToArray(),
-                main_sprite = new SpriteInfo { name = flash.extra.main_sprite.name, frame_rate = frame_rate, work_area = new int[] { 0, main_sprite_frame.Length }, frame = FrameInfo2.fallback(main_sprite_frame) },
+                main_sprite = new() { name = flash.extra.main_sprite.name, frame_rate = frame_rate, work_area = new int[] { 0, main_sprite_frame.Length }, frame = FrameInfo2.fallback(main_sprite_frame) },
             };
         }
 
@@ -640,7 +640,7 @@ namespace PopStudio.PopAnim
 
         public static XElement make_image_document(int index, ImageInfo image)
         {
-            return new XElement(xflns + "DOMSymbolItem",
+            return new XElement("DOMSymbolItem",
                 k_xmlns_attribute,
                 new XAttribute("name", $"image/image_{index + 1}"),
                 new XAttribute("symbolType", "graphic"),
@@ -686,8 +686,8 @@ namespace PopStudio.PopAnim
 
         public static XElement make_sprite_document(int index, SpriteInfo sprite, SpriteInfo[] sub_sprite)
         {
-            Dictionary<int, Model> model = new Dictionary<int, Model>();
-            Dictionary<int, List<XElement>> frame_node_list = new Dictionary<int, List<XElement>>();
+            Dictionary<int, Model> model = new();
+            Dictionary<int, List<XElement>> frame_node_list = new();
             sprite.frame.Select((frame, frame_index) =>
             {
                 foreach (var e in frame.remove)
@@ -696,7 +696,7 @@ namespace PopStudio.PopAnim
                 }
                 foreach (var e in frame.append)
                 {
-                    model[e.index] = new Model
+                    model[e.index] = new()
                     {
                         state = null,
                         resource = e.resource,
@@ -706,7 +706,7 @@ namespace PopStudio.PopAnim
                         frame_start = frame_index,
                         frame_duration = frame_index,
                     };
-                    frame_node_list[e.index] = new List<XElement>();
+                    frame_node_list[e.index] = new();
                     if (frame_index > 0)
                     {
                         frame_node_list[e.index].Add(
@@ -802,7 +802,7 @@ namespace PopStudio.PopAnim
                 frame_node[frame_node.Count - 1].SetAttributeValue("duration", layer.frame_duration);
                 model.Remove(layer_index);
             }
-            return new XElement(xflns + "DOMSymbolItem",
+            return new XElement("DOMSymbolItem",
                 k_xmlns_attribute,
                 new XAttribute("name", index == -1 ? "main_sprite" : $"sprite/sprite_{index + 1}"),
                 new XAttribute("symbolType", "graphic"),
@@ -828,13 +828,13 @@ namespace PopStudio.PopAnim
 
         public static XElement make_main_document(PopAnimInfo animation)
         {
-            PrevEnd prev_end = new PrevEnd
+            PrevEnd prev_end = new()
             {
                 flow = -1,
                 command = -1
             };
-            List<XElement> flow_node = new List<XElement>();
-            List < XElement> command_node = new List<XElement>();
+            List<XElement> flow_node = new();
+            List < XElement> command_node = new();
             animation.main_sprite.frame.Select((frame, frame_index) =>
             {
                 if (frame.label != null || frame.stop)
@@ -903,7 +903,7 @@ namespace PopStudio.PopAnim
                             new XAttribute("duration", animation.main_sprite.frame.Length - (prev_end.command + 1))
                         ));
             }
-            return new XElement(xflns + "DOMDocument",
+            return new XElement("DOMDocument",
                 k_xmlns_attribute,
                 new XAttribute("frameRate", animation.main_sprite.frame_rate),
                 new XAttribute("width", animation.size[0]),
@@ -929,12 +929,12 @@ namespace PopStudio.PopAnim
                     ).ToArray(),
                     animation.image.Select((e, i) =>
                         new XElement("Include",
-                            new XAttribute("href", $"image/image_${i + 1}.xml")
+                            new XAttribute("href", $"image/image_{i + 1}.xml")
                         )
                     ).ToArray(),
                     animation.sprite.Select((e, i) =>
                         new XElement("Include",
-                            new XAttribute("href", $"sprite/sprite_${i + 1}.xml")
+                            new XAttribute("href", $"sprite/sprite_{i + 1}.xml")
                         )
                     ).ToArray(),
                     new XElement("Include",
@@ -979,7 +979,7 @@ namespace PopStudio.PopAnim
         {
             return new FlashPackage
             {
-                extra = new PopAnimInfo
+                extra = new()
                 {
                     version = animation.version,
                     position = animation.position,
@@ -992,13 +992,13 @@ namespace PopStudio.PopAnim
                     {
                         name = e.name,
                     }).ToArray(),
-                    main_sprite = new SpriteInfo
+                    main_sprite = new()
                     {
                         name = animation.main_sprite.name,
                     },
                 },
                 document = make_main_document(animation),
-                library = new FlashPackage.Library
+                library = new()
                 {
                     image = animation.image.Select((e, i) => make_image_document(i, e)).ToArray(),
                     sprite = animation.sprite.Select((e, i) => make_sprite_document(i, e, animation.sprite)).ToArray(),
@@ -1045,7 +1045,7 @@ namespace PopStudio.PopAnim
 
         public static XElement create_one(int index, ImageInfo image, int resolution)
         {
-            return new XElement(xflns + "DOMSymbolItem",
+            return new XElement("DOMSymbolItem",
                 k_xmlns_attribute,
                 new XAttribute("name", $"source/source_{index + 1}"),
                 new XAttribute("symbolType", "graphic"),
@@ -1059,7 +1059,7 @@ namespace PopStudio.PopAnim
                                         new XAttribute("index", "0"),
                                         new XElement("elements",
                                             new XElement("DOMBitmapInstance",
-                                            new XAttribute("libraryItemName", $"media/{image.name.Split(" | ")[0]}"),
+                                            new XAttribute("libraryItemName", $"media/{image.name.Split("|")[0]}"),
                                                 new XElement("matrix",
                                                     new XElement("Matrix", make_scale_matrix(resolution))
                                                 )
@@ -1212,7 +1212,7 @@ namespace PopStudio.PopAnim
 
         public const string k_xfl_version = "2.971";
 
-        public static XAttribute k_xmlns_attribute = new XAttribute(XNamespace.Xmlns + "xsi", "http://www.w3.org/2001/XMLSchema-instance");
+        public static XAttribute k_xmlns_attribute = new(XNamespace.Xmlns + "xsi", "http://www.w3.org/2001/XMLSchema-instance");
 
         public static XNamespace xflns = "http://ns.adobe.com/xfl/2008/";
 
@@ -1240,7 +1240,7 @@ namespace PopStudio.PopAnim
         {
             var extra = jsonReadFile<PopAnimInfo>($"{directory}/extra.json");
             var document = xmlReadFile($"{directory}/DOMDocument.xml");
-            var library = new FlashPackage.Library
+            FlashPackage.Library library = new()
             {
                 image = extra.image.Select((e, i) => (xmlReadFile($"{directory}/LIBRARY/image/image_{i + 1}.xml"))).ToArray(),
                 sprite = extra.sprite.Select((e, i) => (xmlReadFile($"{directory}/LIBRARY/sprite/sprite_{i + 1}.xml"))).ToArray(),
@@ -1266,24 +1266,39 @@ namespace PopStudio.PopAnim
         // ------------------------------------------------
         public static void xmlWriteFile(string outFile, XElement data)
         {
-            XDocument document = new XDocument(new XDeclaration("1.0", "utf-8", "yes"), data);
-            document.Save(outFile);
+            XDocument document = new(new XDeclaration("1.0", "utf-8", null), data);
+            data.Name = xflns + data.Name.LocalName;
+            foreach (var e in data.Descendants())
+            {
+                e.Name = xflns + e.Name.LocalName;
+            }
+            XmlWriterSettings settings = new()
+            {
+                Indent = true,
+                IndentChars = "\t"
+            };
+            using var writer = XmlWriter.Create(outFile, settings);
+            document.Save(writer);
         }
         public static XElement xmlReadFile(string file)
         {
-            return XDocument.Load(file).Root!;
+            XElement data = XDocument.Load(file).Root!;
+            data.Name = data.Name.LocalName;
+            foreach (var e in data.Descendants())
+            {
+                e.Name = e.Name.LocalName;
+            }
+            return data;
         }
         public static void jsonWriteFile(string outFile, PopAnimInfo data)
         {
-            using (FileStream file = File.OpenWrite(outFile))
+            using FileStream file = File.OpenWrite(outFile);
+            JsonSerializerOptions setting = new()
             {
-                var setting = new JsonSerializerOptions
-                {
-                    //Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                    WriteIndented = true
-                };
-                JsonSerializer.Serialize(file, data, setting);
-            }
+                //Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                WriteIndented = true
+            };
+            JsonSerializer.Serialize(file, data, setting);
         }
 
         public static T jsonReadFile<T>(string file)
