@@ -8,7 +8,7 @@ namespace PopStudio.PopAnim
 {
     internal static class PamXfl
     {
-        internal class Model
+        private class Model
         {
             public bool? state { get; set; }
             public int index { get; set; }
@@ -19,9 +19,9 @@ namespace PopStudio.PopAnim
             public double[] color { get; set; }
             public double[] transform { get; set; }
         }
-        internal class FlashPackage
+        private class FlashPackage
         {
-            internal class Library
+            public class Library
             {
                 public XElement[] image { get; set; }
                 public XElement[] sprite { get; set; }
@@ -31,39 +31,18 @@ namespace PopStudio.PopAnim
             public XElement document { get; set; }
             public Library library { get; set; }
         }
-        internal class FrameInfo2 : FrameInfo
-        {
-            public new List<CommandsInfo> command { get; set; }
-            public new List<RemovesInfo> remove { get; set; }
-            public new List<AddsInfo> append { get; set; }
-            public new List<MovesInfo> change { get; set; }
-            public static FrameInfo fallback(FrameInfo2 src)
-            {
-                return new FrameInfo
-                {
-                    command = src.command.ToArray(),
-                    remove = src.remove.ToArray(),
-                    append = src.append.ToArray(),
-                    change = src.change.ToArray(),
-                    label = src.label,
-                    stop = src.stop
-                };
-            }
-            public static FrameInfo[] fallback(FrameInfo2[] src)
-            {
-                return src.Select(src => fallback(src)).ToArray();
-            }
-        }
 
         public static void Encode(PopAnimInfo pamInfo, string outFolder, int resolution)
         {
             Directory.CreateDirectory(outFolder + "/LIBRARY/image");
             Directory.CreateDirectory(outFolder + "/LIBRARY/sprite");
             Directory.CreateDirectory(outFolder + "/LIBRARY/source");
+            Directory.CreateDirectory(outFolder + "/LIBRARY/media");
             var ripe = from(pamInfo);
             save_flash_package(ripe, outFolder);
             create_fsh(outFolder, pamInfo, resolution);
             create_xfl_content_file(outFolder);
+            create_image_default(outFolder, pamInfo);
         }
 
         public static PopAnimInfo Decode(string inFolder)
@@ -72,10 +51,15 @@ namespace PopStudio.PopAnim
             return to(ripe);
         }
 
+        public static void Resize(string inFolder, int resolution)
+        {
+            resize_fs(inFolder, resolution);
+        }
+
 
         // ------------- to -------------------------------
 
-        public static double[] parse_transform_origin(XElement x_Matrix)
+        private static double[] parse_transform_origin(XElement x_Matrix)
         {
             return new double[] {
                 double.Parse((string)x_Matrix.Attribute("x") ?? "0"),
@@ -83,7 +67,7 @@ namespace PopStudio.PopAnim
             };
         }
 
-        public static double[] parse_transform(XElement x_Matrix)
+        private static double[] parse_transform(XElement x_Matrix)
         {
             return new double[] {
                 double.Parse((string)x_Matrix.Attribute("a") ?? "1"),
@@ -98,7 +82,7 @@ namespace PopStudio.PopAnim
         {
             return Math.Max(0, Math.Min(255, double.Parse(multiplier_s ?? "1") * 255 + double.Parse(offset_s ?? "0"))) / 255;
         }
-        public static double[] parse_color(XElement x_Matrix)
+        private static double[] parse_color(XElement x_Matrix)
         {
             return new double[] {
                 parse_color_compute((string)x_Matrix.Attribute("redMultiplier"), (string)x_Matrix.Attribute("redOffset")),
@@ -108,7 +92,7 @@ namespace PopStudio.PopAnim
             };
         }
 
-        public static double[] parse_image_document(XElement x_DOMSymbolItem, int index)
+        private static double[] parse_image_document(XElement x_DOMSymbolItem, int index)
         {
             if (x_DOMSymbolItem.Name.LocalName != "DOMSymbolItem")
             {
@@ -207,10 +191,10 @@ namespace PopStudio.PopAnim
             return transform;
         }
 
-        public static FrameInfo2[] parse_sprite_document(XElement x_DOMSymbolItem, int index)
+        private static FrameInfo[] parse_sprite_document(XElement x_DOMSymbolItem, int index)
         {
             Model model = null;
-            List<FrameInfo2> result = new();
+            List<FrameInfo> result = new();
             if (x_DOMSymbolItem.Name.LocalName != "DOMSymbolItem")
             {
                 throw new Exception("");
@@ -248,7 +232,7 @@ namespace PopStudio.PopAnim
             {
                 if (result.Count <= index)
                 {
-                    result.AddRange(new FrameInfo2[index - result.Count + 1]);
+                    result.AddRange(new FrameInfo[index - result.Count + 1]);
                 }
                 if (result[index] == null)
                 {
@@ -432,7 +416,7 @@ namespace PopStudio.PopAnim
             return result.Take(result.Count - 1).ToArray();    // TODO result.slice(0, -1)
         }
 
-        public static PopAnimInfo to(FlashPackage flash)
+        private static PopAnimInfo to(FlashPackage flash)
         {
             var x_DOMDocument = flash.document;
             if (x_DOMDocument.Name.LocalName != "DOMDocument")
@@ -617,15 +601,15 @@ namespace PopStudio.PopAnim
                 sprite = flash.extra.sprite.Select((e, i) =>
                 {
                     var frame = parse_sprite_document(flash.library.sprite[i], i);
-                    return new SpriteInfo { name = e.name, frame_rate = frame_rate, work_area = new int[] { 0, frame.Length }, frame = FrameInfo2.fallback(frame) };
+                    return new SpriteInfo { name = e.name, frame_rate = frame_rate, work_area = new int[] { 0, frame.Length }, frame = frame };
                 }).ToArray(),
-                main_sprite = new() { name = flash.extra.main_sprite.name, frame_rate = frame_rate, work_area = new int[] { 0, main_sprite_frame.Length }, frame = FrameInfo2.fallback(main_sprite_frame) },
+                main_sprite = new() { name = flash.extra.main_sprite.name, frame_rate = frame_rate, work_area = new int[] { 0, main_sprite_frame.Length }, frame = main_sprite_frame },
             };
         }
 
         // ------------------------------------------------
 
-        //	public static void to_fs(
+        //	private static void to_fs(
         //		string raw_file,
         //		string ripe_directory
         //	)
@@ -641,7 +625,7 @@ namespace PopStudio.PopAnim
 
         // -------------- from ----------------------------
 
-        public static XElement make_image_document(int index, ImageInfo image)
+        private static XElement make_image_document(int index, ImageInfo image)
         {
             return new XElement("DOMSymbolItem",
                 k_xmlns_attribute,
@@ -687,7 +671,7 @@ namespace PopStudio.PopAnim
             );
         }
 
-        public static XElement make_sprite_document(int index, SpriteInfo sprite, SpriteInfo[] sub_sprite)
+        private static XElement make_sprite_document(int index, SpriteInfo sprite, SpriteInfo[] sub_sprite)
         {
             Dictionary<int, Model> model = new();
             Dictionary<int, List<XElement>> frame_node_list = new();
@@ -823,13 +807,13 @@ namespace PopStudio.PopAnim
             );
         }
 
-        internal class PrevEnd
+        private class PrevEnd
         {
             public int flow { get; set; }
             public int command { get; set; }
         }
 
-        public static XElement make_main_document(PopAnimInfo animation)
+        private static XElement make_main_document(PopAnimInfo animation)
         {
             PrevEnd prev_end = new()
             {
@@ -871,7 +855,7 @@ namespace PopStudio.PopAnim
                     flow_node.Add(node);
                     prev_end.flow = frame_index;
                 }
-                if (frame.command.Length > 0)
+                if (frame.command.Count > 0)
                 {
                     if (prev_end.command + 1 < frame_index)
                     {
@@ -978,7 +962,7 @@ namespace PopStudio.PopAnim
             );
         }
 
-        public static FlashPackage from(PopAnimInfo animation)
+        private static FlashPackage from(PopAnimInfo animation)
         {
             return new FlashPackage
             {
@@ -1013,18 +997,18 @@ namespace PopStudio.PopAnim
 
         // ------------ source manager --------------------
 
-        public static XAttribute[] make_scale_matrix(int resolution)
+        private static XAttribute[] make_scale_matrix(int resolution)
         {
             double scale = (double)(k_standard_resolution) / resolution;
             return new XAttribute[] {
-            new XAttribute("a", scale.ToString("N6")),
-            new XAttribute("d", scale.ToString("N6"))
-        };
+                new XAttribute("a", scale.ToString("N6")),
+                new XAttribute("d", scale.ToString("N6"))
+            };
         }
 
         // ------------------------------------------------
 
-        public static XElement create_one(int index, ImageInfo image, int resolution)
+        private static XElement create_one(int index, ImageInfo image, int resolution)
         {
             return new XElement("DOMSymbolItem",
                 k_xmlns_attribute,
@@ -1055,28 +1039,28 @@ namespace PopStudio.PopAnim
             );
         }
 
-        public static XElement[] create(PopAnimInfo animation, int resolution)
+        private static XElement[] create(PopAnimInfo animation, int resolution)
         {
             return animation.image.Select((e, i) => create_one(i, e, resolution)).ToArray();
         }
 
         // ------------------------------------------------
 
-        public static void resize_one(XElement document, int resolution)
+        private static void resize_one(XElement document, int resolution)
         {
             XElement scale_matrix = document.XPathSelectElement("./timeline/DOMTimeline/layers/DOMLayer/frames/DOMFrame/elements/DOMBitmapInstance/matrix/Matrix");
             scale_matrix.RemoveAttributes();
             scale_matrix.Add(make_scale_matrix(resolution));
         }
 
-        public static void resize(XElement[] document, int resolution)
+        private static void resize(XElement[] document, int resolution)
         {
             Array.ForEach(document, (e) => resize_one(e, resolution));
         }
 
         // ------------------------------------------------
 
-        public static void create_fsh(string directory, PopAnimInfo data, int resolution = k_standard_resolution)
+        private static void create_fsh(string directory, PopAnimInfo data, int resolution = k_standard_resolution)
         {
             create(data, resolution).Select((e, i) =>
             {
@@ -1085,7 +1069,7 @@ namespace PopStudio.PopAnim
             }).ToArray();
         }
 
-        public static void resize_fs(string directory, int resolution)
+        private static void resize_fs(string directory, int resolution)
         {
             var extra = jsonReadFile<PopAnimInfo>($"{directory}/extra.json");
             var document = extra.image.Select((e, i) => (xmlReadFile($"{directory}/LIBRARY/source/source_{i + 1}.xml"))).ToArray();
@@ -1105,21 +1089,21 @@ namespace PopStudio.PopAnim
 
         // --------------- flash common -------------------
 
-        public static double[] k_initial_transform = { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 };
+        private static double[] k_initial_transform = { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 };
 
-        public static double[] mix_transform(double[] source, double[] change)
-        {
-            return new double[] {
-                change[0] * source[0] + change[2] * source[1],
-                change[1] * source[0] + change[3] * source[1],
-                change[0] * source[2] + change[2] * source[3],
-                change[1] * source[2] + change[3] * source[3],
-                change[0] * source[4] + change[2] * source[5] + change[4],
-                change[1] * source[4] + change[3] * source[5] + change[5]
-            };
-        }
+        //private static double[] mix_transform(double[] source, double[] change)
+        //{
+        //    return new double[] {
+        //        change[0] * source[0] + change[2] * source[1],
+        //        change[1] * source[0] + change[3] * source[1],
+        //        change[0] * source[2] + change[2] * source[3],
+        //        change[1] * source[2] + change[3] * source[3],
+        //        change[0] * source[4] + change[2] * source[5] + change[4],
+        //        change[1] * source[4] + change[3] * source[5] + change[5]
+        //    };
+        //}
 
-        public static double[] compute_standard_transform_from_variant(double[] transform)
+        private static double[] compute_standard_transform_from_variant(double[] transform)
         {
             double[] result;
             if (transform.Length == 2)
@@ -1154,7 +1138,7 @@ namespace PopStudio.PopAnim
             return result;
         }
 
-        public static double[] comput_variant_transform_from_standard(double[] data)
+        private static double[] comput_variant_transform_from_standard(double[] data)
         {
             if (data[0] == data[3] && data[1] == -data[2])
             {
@@ -1162,19 +1146,19 @@ namespace PopStudio.PopAnim
                 {
                     return new double[] { data[4], data[5] };
                 }
-                //double acos_value = Math.Acos(data[0]);
-                //double asin_value = Math.Asin(data[1]);
-                //if (Math.Abs(Math.Abs(acos_value) - Math.Abs(asin_value)) <= 1e-2)
-                //{
-                //    return new double[] { asin_value, data[4], data[5] };
-                //}
+                double acos_value = Math.Acos(data[0]);
+                double asin_value = Math.Asin(data[1]);
+                if (Math.Abs(Math.Abs(acos_value) - Math.Abs(asin_value)) <= 1e-2)
+                {
+                    return new double[] { asin_value, data[4], data[5] };
+                }
             }
             return (double[])data.Clone();
         }
 
         // ------------------------------------------------
 
-        static readonly double[] k_initial_color = { 1.0, 1.0, 1.0, 1.0 };
+        private static readonly double[] k_initial_color = { 1.0, 1.0, 1.0, 1.0 };
 
         // ------------------------------------------------
 
@@ -1183,21 +1167,21 @@ namespace PopStudio.PopAnim
 
         // -------------- flash convert common ---
 
-        public const int k_standard_resolution = 1200;
+        private const int k_standard_resolution = 1200;
 
         // ------------------------------------------------
 
-        public const string k_xfl_content = "PROXY-CS5";
+        private const string k_xfl_content = "PROXY-CS5";
 
-        public const string k_xfl_version = "2.971";
+        private const string k_xfl_version = "2.971";
 
-        public static XAttribute k_xmlns_attribute = new(XNamespace.Xmlns + "xsi", "http://www.w3.org/2001/XMLSchema-instance");
+        private static XAttribute k_xmlns_attribute = new(XNamespace.Xmlns + "xsi", "http://www.w3.org/2001/XMLSchema-instance");
 
-        public static XNamespace xflns = "http://ns.adobe.com/xfl/2008/";
+        private static XNamespace xflns = "http://ns.adobe.com/xfl/2008/";
 
         // ------------------------------------------------
 
-        public static void save_flash_package(FlashPackage data, string directory)
+        private static void save_flash_package(FlashPackage data, string directory)
         {
             jsonWriteFile($"{directory}/extra.json", data.extra);
             xmlWriteFile($"{directory}/DOMDocument.xml", data.document);
@@ -1215,7 +1199,7 @@ namespace PopStudio.PopAnim
             return;
         }
 
-        public static FlashPackage load_flash_package(string directory)
+        private static FlashPackage load_flash_package(string directory)
         {
             var extra = jsonReadFile<PopAnimInfo>($"{directory}/extra.json");
             var document = xmlReadFile($"{directory}/DOMDocument.xml");
@@ -1235,7 +1219,7 @@ namespace PopStudio.PopAnim
 
         // ------------------------------------------------
 
-        public static void create_xfl_content_file(
+        private static void create_xfl_content_file(
             string directory
         )
         {
@@ -1243,7 +1227,25 @@ namespace PopStudio.PopAnim
         }
 
         // ------------------------------------------------
-        public static void xmlWriteFile(string outFile, XElement data)
+
+        private static void create_image_default(string outFolder, PopAnimInfo pamInfo)
+        {
+            string path = outFolder + "/LIBRARY/media/";
+            foreach (string p in pamInfo.image.Select((e) => path + e.name.Split("|")[0] + ".png"))
+            {
+                if (!File.Exists(p))
+                {
+                    using (FileStream fs = File.Create(p))
+                    {
+                        byte[] img = Reanim.FlashXfl.defaultPicture;
+                        fs.Write(img, 0, img.Length);
+                    }
+                }
+            }
+        }
+
+        // ------------------------------------------------
+        private static void xmlWriteFile(string outFile, XElement data)
         {
             foreach (var e in data.DescendantsAndSelf())
             {
@@ -1259,7 +1261,7 @@ namespace PopStudio.PopAnim
             XDocument document = new(new XDeclaration("1.0", "utf-8", null), data);
             document.Save(writer);
         }
-        public static XElement xmlReadFile(string file)
+        private static XElement xmlReadFile(string file)
         {
             XElement data = XDocument.Load(file).Root!;
             foreach (var e in data.DescendantsAndSelf())
@@ -1268,18 +1270,18 @@ namespace PopStudio.PopAnim
             }
             return data;
         }
-        public static void jsonWriteFile(string outFile, PopAnimInfo data)
+        private static void jsonWriteFile(string outFile, PopAnimInfo data)
         {
             using FileStream file = File.OpenWrite(outFile);
             JsonSerializerOptions setting = new()
             {
-                //Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
                 WriteIndented = true
             };
             JsonSerializer.Serialize(file, data, setting);
         }
 
-        public static T jsonReadFile<T>(string file)
+        private static T jsonReadFile<T>(string file)
         {
             string jsonString = File.ReadAllText(file);
 
