@@ -192,13 +192,16 @@
         public string Setting_CompiledLoadError_Title => "Load Error";
         public string Setting_CompiledLoadError_Text_NoFile => "No files available. Please contact the author!";
         public string Setting_CompiledLoadError_Text => "The file seems damaged. This setting is cleared! ";
-        public string Setting_ItemXfl => "Xfl Generated Setting";
+        public string Setting_ItemXfl => "Reanim_Xfl Generated Setting";
         public string Setting_IntroXfl => "When using reanim transcoding to generate Flash_Xfl document to use Adobe Animate to edit it, you can specify the canvas size, whether the generated picture name uses the I label signature or the name label name, and the scaling multiple of the horizontal and vertical coordinates. ";
         public string Setting_XflWidth => "Canva Width";
         public string Setting_XflHeight => "Canva Height";
         public string Setting_XflLabelName => "Use Label Name";
         public string Setting_XflScaleX => "Scale X";
         public string Setting_XflScaleY => "Scale Y";
+        public string Setting_ItemPamXfl => "Pam_Xfl Generated Setting";
+        public string Setting_IntroPamXfl => "When using reanim transcoding to generate Flash_Xfl document to use Adobe Animate to edit it, you can specify the resolution ratio. ";
+        public string Setting_PamXflResolution => "Resolution Ratio";
         public string Setting_AD => "Load ads when program starts";
         public string Setting_Load => "Load";
         public string Setting_Unload => "Unload";
@@ -246,7 +249,7 @@
 
         //Pam
         public string Pam_Title => "Pam";
-        public string Pam_Introduction => "Through PAM transcoding, you can convert PAM animation file and json file to modify game animation! Pam versions 1 to 6 are all supported! You can also use Twinkles-Toolkit to convert the generated JSON file into XFL animation for Adobe animation to view! ";
+        public string Pam_Introduction => "Through PAM transcoding, you can convert PAM animation file and json file to modify game animation! ";
         public string Pam_Mode1 => "Decode";
         public string Pam_Mode2 => "Encode";
         public string Pam_Choose1 => "The decoded file path";
@@ -263,6 +266,8 @@
         public string Pam_Choose4_Batch => "The encoded folder path";
         public string Pam_Choose5_Batch => "The path of generated folder";
         public string Pam_Choose6_Batch => "Encoding Mode";
+        public string Pam_InFormat => "Format of in file";
+        public string Pam_OutFormat => "Format of out file";
 
         //RTON
         public string RTON_Title => "RTON";
@@ -359,13 +364,13 @@
         public string HomePage_Author_String => "Author:";
         public string HomePage_Author => "YingFengTingYu";
         public string HomePage_Thanks_String => "Thanks:";
-        public string HomePage_Thanks => "2508, Japonisme Toumai, 补补23456, 孤独泪痕, 63enjoy, AS魇梦蚀, 伊特, 某个萌新, 天天, Indestructible_Ch, 僵学者, An-Haze";
+        public string HomePage_Thanks => "Bomb, 补补23456, 2508, Japonisme Toumai, 孤独泪痕, 63enjoy, AS魇梦蚀, 伊特, 某个萌新, 天天, Indestructible_Ch, 僵学者, An-Haze";
         public string HomePage_QQGroup_String => "QQ group:";
         public string HomePage_QQGroup => "1017246977";
         public string HomePage_Course_String => "Course Video:";
         public string HomePage_Course => "https://space.bilibili.com/411256864";
         public string HomePage_AppNewNotice_String => "Update announcement:";
-        public string HomePage_AppNewNotice => "1. Support batch transcoding files; \n2. Fix the bug that the image name is cleared by compiled phone32/64 format; \n3. Fix the bug of file errors with Cdat encoding of 256 bytes or less.";
+        public string HomePage_AppNewNotice => "1. Support pam xfl transcoding; \n2. Support WebAssembly platform. ";
         //Share
         public string Share_FileNotFound => "File {0} does not exist! ";
         public string Share_FolderNotFound => "Folder {0} does not exist! ";
